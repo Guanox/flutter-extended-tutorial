@@ -23,6 +23,8 @@ dependencies:
   # firebase integration library
   firebase_core: ^0.2.5
   firebase_database: ^1.0.5
+  firebase_auth: ^0.6.4
+  google_sign_in: ^3.2.4
 
   # To persist model data to shared prefences
   shared_preferences: ^0.4.2
@@ -48,11 +50,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #  - images/a_dot_burr.jpeg
-  #  - images/a_dot_ham.jpeg
+  assets:
+  - assets/user.png
+  - assets/google.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.

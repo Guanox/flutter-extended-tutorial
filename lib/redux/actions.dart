@@ -1,14 +1,33 @@
 import 'package:liftr/model/model.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class UserLoadedAction {
+  final FirebaseUser user;
+
+  UserLoadedAction(this.user);
+}
+
+class GoogleLoginAction {
+  final List<Startup> cachedStartups;
+
+  GoogleLoginAction({this.cachedStartups = const []});
+}
+
+class GoogleLogoutAction {}
+
+class RemoveStartupsAction {}
 
 class AddStartupAction {
-  static int _id = 0;
-  final String name;
+  final Startup startup;
 
-  AddStartupAction(this.name) {
-    _id = _id + 1;
-  }  
+  AddStartupAction(this.startup);
+}
 
-  int get id => _id;
+class AddedStartupAction {
+  final Event event;
+
+  AddedStartupAction(this.event);
 }
 
 class RemoveStartupAction {
@@ -17,10 +36,16 @@ class RemoveStartupAction {
   RemoveStartupAction(this.startup);
 }
 
-class GetStartupsAction { }
+class RemovedStartupAction {
+  final Event event;
 
-class LoadedStartupsAction {
-  final List<Startup> startups;
+  RemovedStartupAction(this.event);
+}
 
-  LoadedStartupsAction(this.startups);
+class InitAction { }
+
+class AddDatabaseReferenceAction {
+  final DatabaseReference databaseReference;
+
+  AddDatabaseReferenceAction(this.databaseReference);
 }

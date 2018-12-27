@@ -1,54 +1,131 @@
-import 'dart:async';
-import 'dart:convert';
-
+import 'package:firebase_database/firebase_database.dart';
 import 'package:redux/redux.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:liftr/model/model.dart';
 import 'package:liftr/redux/actions.dart';
+import 'dart:async';
+
+final GoogleSignIn _googleSignIn = new GoogleSignIn();
 
 List<Middleware<AppState>> appStateMiddleware([
-  AppState state = const AppState(startups: []),
+  AppState state = const AppState(startups: [], firebaseState: FirebaseState()),
 ]) {
-  final loadStartups = _loadFromPrefs(state);
-  final saveStartups = _saveToPrefs(state);
+  final init = _handleInitAction(state);
+  final userLoad = _handleUserLoadedAction(state);
+  final googleLogin = _handleGoogleLoginAction(state);
+  final googleLogout = _handleGoogleLogoutAction(state);
+  final addStartup = _handleAddStartupAction(state);
+  final removeStartup = _handleRemoveStartupAction(state);
 
   return [
-    TypedMiddleware<AppState, AddStartupAction>(saveStartups),
-    TypedMiddleware<AppState, RemoveStartupAction>(saveStartups),
-    TypedMiddleware<AppState, GetStartupsAction>(loadStartups),
+    TypedMiddleware<AppState, InitAction>(init),
+    TypedMiddleware<AppState, UserLoadedAction>(userLoad),
+    TypedMiddleware<AppState, GoogleLoginAction>(googleLogin),
+    TypedMiddleware<AppState, GoogleLogoutAction>(googleLogout),
+    TypedMiddleware<AppState, AddStartupAction>(addStartup),
+    TypedMiddleware<AppState, RemoveStartupAction>(removeStartup),
   ];
 }
 
-Middleware<AppState> _loadFromPrefs(AppState state) {
-  return (Store<AppState> store, action, NextDispatcher next) {
+Middleware<AppState> _handleGoogleLogoutAction(AppState state) {
+  return (Store<AppState> store, action, NextDispatcher next) async {
     next(action);
 
-    loadFromPrefs()
-        .then((state) => store.dispatch(LoadedStartupsAction(state.startups)));
+    _googleSignIn.signOut();
+    FirebaseAuth.instance.signOut().then((_) => FirebaseAuth.instance
+        .signInAnonymously()
+        .then((user) => store.dispatch(UserLoadedAction(user))));
   };
 }
 
-Middleware<AppState> _saveToPrefs(AppState state) {
-  return (Store<AppState> store, action, NextDispatcher next) {
+Middleware<AppState> _handleGoogleLoginAction(AppState state) {
+  return (Store<AppState> store, action, NextDispatcher next) async {
     next(action);
 
-    saveToPrefs(store.state);
+    GoogleSignInAccount googleUser = await _getGoogleUser();
+    GoogleSignInAuthentication credentials = await googleUser.authentication;
+
+    // try {
+    // await FirebaseAuth.instance.linkWithGoogleCredential(
+    //     idToken: credentials.idToken, accessToken: credentials.accessToken);
+    // } catch (e) {
+    await FirebaseAuth.instance.signInWithGoogle(
+      idToken: credentials.idToken,
+      accessToken: credentials.accessToken,
+    );
+    // }
+
+    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    await user.updateProfile(new UserUpdateInfo()
+      ..photoUrl = googleUser.photoUrl
+      ..displayName = googleUser.displayName);
+    user.reload();
+
+    store.dispatch(new UserLoadedAction(user));
   };
 }
 
-Future<AppState> loadFromPrefs() async {
-  SharedPreferences preferences = await SharedPreferences.getInstance();
-  var string = preferences.getString('startupsState');
-  if (string != null) {
-    Map map = json.decode(string);
-    return AppState.fromJson(map);
+Future<GoogleSignInAccount> _getGoogleUser() async {
+  GoogleSignInAccount googleUser = _googleSignIn.currentUser;
+  // if (googleUser == null) {
+  //   googleUser = await _googleSignIn.signInSilently(suppressErrors: true);
+  // }
+  if (googleUser == null) {
+    googleUser = await _googleSignIn.signIn();
   }
-  return AppState.initialState();
+  return googleUser;
 }
 
-void saveToPrefs(AppState state) async {
-  SharedPreferences preferences = await SharedPreferences.getInstance();
-  var string = json.encode(state.toJson());
-  await preferences.setString('startupsState', string);
+Middleware<AppState> _handleUserLoadedAction(AppState state) {
+  return (Store<AppState> store, action, NextDispatcher next) {
+    next(action);
+
+    store.dispatch(RemoveStartupsAction()); // reset startups
+
+    store.dispatch(AddDatabaseReferenceAction(
+      FirebaseDatabase.instance
+          .reference()
+          .child(store.state.firebaseState.user.uid)
+          .child('startups')
+            ..onChildAdded
+                .listen((event) => store.dispatch(AddedStartupAction(event)))
+            ..onChildRemoved
+                .listen((event) => store.dispatch(RemovedStartupAction(event))),
+    ));
+  };
+}
+
+Middleware<AppState> _handleInitAction(AppState state) {
+  return (Store<AppState> store, action, NextDispatcher next) {
+    next(action);
+
+    if (store.state.firebaseState.user == null) {
+      FirebaseAuth.instance.currentUser().then((user) {
+        if (user != null) {
+          store.dispatch(UserLoadedAction(user));
+        } else {
+          FirebaseAuth.instance
+              .signInAnonymously()
+              .then((user) => store.dispatch(UserLoadedAction(user)));
+        }
+      });
+    }
+  };
+}
+
+Middleware<AppState> _handleAddStartupAction(AppState state) {
+  return (Store<AppState> store, action, NextDispatcher next) {
+    next(action);
+
+    store.state.firebaseState.mainReference.push().set(action.startup.toJson());
+  };
+}
+
+Middleware<AppState> _handleRemoveStartupAction(AppState state) {
+  return (Store<AppState> store, action, NextDispatcher next) {
+    next(action);
+
+    store.state.firebaseState.mainReference.child(action.startup.key).remove();
+  };
 }

@@ -6,29 +6,39 @@ import 'package:redux/redux.dart';
 AppState appStateReducer(AppState state, action) {
   return AppState(
     startups: startupReducer(state.startups, action),
+    firebaseState: firebaseReducer(state.firebaseState, action),
   );
 }
 
 Reducer<List<Startup>> startupReducer = combineReducers<List<Startup>>([
-  TypedReducer<List<Startup>, AddStartupAction>(addStartupReducer),
-  TypedReducer<List<Startup>, RemoveStartupAction>(removeStartupReducer),
-  TypedReducer<List<Startup>, LoadedStartupsAction>(loadStartupsReducer),
+  TypedReducer<List<Startup>, AddedStartupAction>(addStartupReducer),
+  TypedReducer<List<Startup>, RemovedStartupAction>(removeStartupReducer),
+  TypedReducer<List<Startup>, RemoveStartupsAction>(removeStartupsReducer),
 ]);
 
-List<Startup> addStartupReducer(List<Startup> startups, AddStartupAction action) {
+Reducer<FirebaseState> firebaseReducer = combineReducers<FirebaseState>([
+  TypedReducer<FirebaseState, AddDatabaseReferenceAction>(addDatabaseReferenceReducer),
+  TypedReducer<FirebaseState, UserLoadedAction>(userLoadedReducer),
+]);
+
+List<Startup> addStartupReducer(List<Startup> startups, AddedStartupAction action) {
   return []
     ..addAll(startups)
-    ..add(Startup(id: action.id, name: action.name));
+    ..add(Startup.fromSnapshot(action.event.snapshot));
 }
 
-List<Startup> removeStartupReducer(List<Startup> startups, RemoveStartupAction action) {
-  return List.unmodifiable(List.from(startups)..remove(action.startup)); // FIX: try remove List.from
+List<Startup> removeStartupReducer(List<Startup> startups, RemovedStartupAction action) {
+  return List.unmodifiable(List.from(startups)..removeWhere((s) => s.key == action.event.snapshot.key));
 }
 
-List<Startup> loadStartupsReducer(List<Startup> startups, LoadedStartupsAction action) {
-  return action.startups; // FIX: try add List.unmodifiable her
+FirebaseState addDatabaseReferenceReducer(FirebaseState firebaseState, AddDatabaseReferenceAction action) {
+  return firebaseState.copyWith(mainReference: action.databaseReference);
 }
 
+FirebaseState userLoadedReducer(FirebaseState firebaseState, UserLoadedAction action) {
+  return firebaseState.copyWith(user: action.user);
+}
 
-
-
+List<Startup> removeStartupsReducer(List<Startup> startups, RemoveStartupsAction action) {
+  return List.unmodifiable([]);
+}

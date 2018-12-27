@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
           primaryColor: Colors.white,
         ),
         home: StoreBuilder<AppState>(
-          onInit: (store) => store.dispatch(GetStartupsAction()),
+          onInit: (store) => store.dispatch(InitAction()),
           builder: (BuildContext context, Store<AppState> store) =>
               RandomWords(store),
         ),
@@ -49,10 +49,10 @@ class RandomWords extends StatefulWidget {
 }
 
 class RandomWordsState extends State<RandomWords> {
+  int _selectedIndex = 1;
   final DevToolsStore<AppState> store;
 
   final List<WordPair> _suggestions = <WordPair>[];
-  final _saved = new Set<WordPair>();
 
   RandomWordsState(this.store);
 
@@ -63,6 +63,31 @@ class RandomWordsState extends State<RandomWords> {
         title: Text('Startup Name Generator'),
         actions: <Widget>[
           new IconButton(icon: const Icon(Icons.list), onPressed: _pushSaved),
+          new Container(
+            height: 50,
+            width: 50,
+            child: new FlatButton(
+              onPressed: () {
+                if (store.state.firebaseState.user?.isAnonymous) {
+                  store.dispatch(GoogleLoginAction(cachedStartups: store.state.startups));
+                } else {
+                  store.dispatch(GoogleLogoutAction());
+                }
+              },
+              child: new ConstrainedBox(
+                constraints: new BoxConstraints.expand(),
+              ),
+            ),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25.0),
+                border: Border.all(
+                    color: Colors.white, style: BorderStyle.solid, width: 2.0),
+                image: DecorationImage(
+                    image: store.state.firebaseState.user?.isAnonymous ?? true
+                        ? AssetImage('assets/user.png')
+                        : NetworkImage(
+                            store.state.firebaseState.user.photoUrl))),
+          ),
         ],
       ),
       body: StoreConnector<AppState, _ViewModel>(
@@ -70,39 +95,39 @@ class RandomWordsState extends State<RandomWords> {
         builder: (BuildContext context, _ViewModel viewModel) =>
             _buildSuggestions(viewModel),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: <BottomNavigationBarItem> [
+          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('home')),
+          BottomNavigationBarItem(icon: Icon(Icons.account_circle), title: Text('account'))
+        ],
+        fixedColor: Colors.lightBlue,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
       drawer: Container(
         child: ReduxDevTools(store),
       ),
     );
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+
+
   Widget _buildSuggestions(_ViewModel viewModel) {
     return new ListView.builder(
         padding: const EdgeInsets.all(16.0),
-        // The itemBuilder callback is called once per suggested
-        // word pairing, and places each suggestion into a ListTile
-        // row. For even rows, the function adds a ListTile row for
-        // the word pairing. For odd rows, the function adds a
-        // Divider widget to visually separate the entries. Note that
-        // the divider may be difficult to see on smaller devices.
         itemBuilder: (BuildContext _context, int i) {
-          // Add a one-pixel-high divider widget before each row
-          // in the ListView.
           if (i.isOdd) {
             return new Divider();
           }
 
-          // The syntax "i ~/ 2" divides i by 2 and returns an
-          // integer result.
-          // For example: 1, 2, 3, 4, 5 becomes 0, 1, 1, 2, 2.
-          // This calculates the actual number of word pairings
-          // in the ListView,minus the divider widgets.
           final int index = i ~/ 2;
-          // If you've reached the end of the available word
-          // pairings...
           if (index >= _suggestions.length) {
-            // ...then generate 10 more and add them to the
-            // suggestions list.
             _suggestions.addAll(generateWordPairs().take(10));
           }
           return _buildRow(_suggestions[index], viewModel);
@@ -110,26 +135,15 @@ class RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildRow(WordPair pair, _ViewModel viewModel) {
-    final alreadySaved =
-        viewModel.startups.where((s) => s.name == pair.asPascalCase).isNotEmpty;
     return new ListTile(
       title: new Text(
         pair.asPascalCase,
         style: TextStyle(fontSize: 18.0),
       ),
-      trailing: new Icon(
-        alreadySaved ? Icons.favorite : Icons.favorite_border,
-        color: alreadySaved ? Colors.red : null,
-      ),
       onTap: () {
-        if (alreadySaved) {
-          Startup s = viewModel.startups
-              .firstWhere((startup) => startup.name == pair.asPascalCase);
-          viewModel.onRemoveStartup(s);
-        } else {
-          viewModel.onAddStartup(pair.asPascalCase);
-        }
-      }, // ... to here.
+        _suggestions.remove(pair);
+        viewModel.onAddStartup(pair.asPascalCase);
+      },
     );
   }
 
@@ -140,10 +154,14 @@ class RandomWordsState extends State<RandomWords> {
       final Iterable<ListTile> tiles =
           viewModel.startups.map((Startup startup) {
         return new ListTile(
-            title: new Text(
-          startup.name,
-          style: TextStyle(fontSize: 18.0),
-        ));
+          title: new Text(startup.name, style: TextStyle(fontSize: 18.0)),
+          trailing: new MaterialButton(
+              child: Text("remove"),
+              textColor: Colors.red,
+              onPressed: () {
+                viewModel.onRemoveStartup(startup);
+              }),
+        );
       });
       final List<Widget> divided = ListTile.divideTiles(
         context: context,
@@ -152,7 +170,7 @@ class RandomWordsState extends State<RandomWords> {
 
       return new Scaffold(
         appBar: new AppBar(
-          title: const Text('Saved Suggestions'),
+          title: Text('Saved Suggestions'),
         ),
         body: new ListView(children: divided),
       );
@@ -164,22 +182,29 @@ class _ViewModel {
   final List<Startup> startups;
   final Function(String) onAddStartup;
   final Function(Startup) onRemoveStartup;
+  final Function(List<Startup>) onGoogleLogin;
 
-  _ViewModel({this.startups, this.onAddStartup, this.onRemoveStartup});
+  _ViewModel(
+      {this.startups, this.onAddStartup, this.onRemoveStartup, this.onGoogleLogin});
 
   factory _ViewModel.create(Store<AppState> store) {
     _onAddStartup(String name) {
-      store.dispatch(AddStartupAction(name));
+      store.dispatch(AddStartupAction(Startup(name: name)));
     }
 
     _onRemoveStartup(Startup startup) {
       store.dispatch(RemoveStartupAction(startup));
     }
 
+    _onGoogleLogin(List<Startup> cachedStartups) {
+      store.dispatch(GoogleLoginAction(cachedStartups: cachedStartups));
+    }
+
     return _ViewModel(
       startups: store.state.startups,
       onAddStartup: _onAddStartup,
       onRemoveStartup: _onRemoveStartup,
+      onGoogleLogin: _onGoogleLogin,
     );
   }
 }

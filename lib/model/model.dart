@@ -1,34 +1,31 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Startup {
-  final int id;
+  String key;
   final String name;
-  final bool favorited;
 
   Startup({
-    @required this.id,
     @required this.name,
-    this.favorited = false,
   });
 
-  Startup copyWith({int id, String name, bool favorited}) {
-    return Startup(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        favorited: favorited ?? this.favorited,
+  Startup._internal(this.key, this.name);
+
+  Startup copyWith({String key, String name }) {
+    return Startup._internal(
+        key ?? this.key,
+        name ?? this.name,
       );
   }
 
-  Startup.fromJson(Map json)
-    : id = json['id'],
-      name = json['name'],
-      favorited = json['favorited'];
+  Startup.fromSnapshot(DataSnapshot snapshot) 
+    : key = snapshot.key,
+      name = snapshot.value['name'];
 
   Map toJson() => {
-    'id': id,
-    'name': name,
-    'favorited': favorited,
+    'key': key,
+    'name': name
   };
 
   @override 
@@ -39,16 +36,16 @@ class Startup {
 
 class AppState {
   final List<Startup> startups;
+  final FirebaseState firebaseState;
 
   const AppState({
     @required this.startups,
+    @required this.firebaseState,
   });
 
   AppState.initialState()  
-    : startups = List.unmodifiable(<Startup>[]);
-
-  AppState.fromJson(Map json)
-    : startups = (json['startups'] as List).map((i) => Startup.fromJson(i)).toList();
+    : startups = List.unmodifiable(<Startup>[]),
+    firebaseState = new FirebaseState();
 
   Map toJson() => {
     'startups': startups
@@ -57,5 +54,19 @@ class AppState {
   @override
   String toString() {
     return toJson().toString();
+  }
+}
+
+class FirebaseState {
+  final DatabaseReference mainReference;
+  final FirebaseUser user;
+
+  const FirebaseState({this.mainReference, this.user});
+
+  FirebaseState copyWith({ DatabaseReference mainReference, FirebaseUser user }) {
+    return new FirebaseState(
+        mainReference: mainReference ?? this.mainReference,
+        user: user ?? this.user,
+        );
   }
 }
