@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:redux/redux.dart';
 import 'package:redux_dev_tools/redux_dev_tools.dart';
@@ -58,56 +59,63 @@ class RandomWordsState extends State<RandomWords> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Startup Name Generator'),
-        actions: <Widget>[
-          new IconButton(icon: const Icon(Icons.list), onPressed: _pushSaved),
-          new Container(
-            height: 50,
-            width: 50,
-            child: new FlatButton(
-              onPressed: () {
-                if (store.state.firebaseState.user?.isAnonymous) {
-                  store.dispatch(GoogleLoginAction(cachedStartups: store.state.startups));
-                } else {
-                  store.dispatch(GoogleLogoutAction());
-                }
-              },
-              child: new ConstrainedBox(
-                constraints: new BoxConstraints.expand(),
-              ),
-            ),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25.0),
-                border: Border.all(
-                    color: Colors.white, style: BorderStyle.solid, width: 2.0),
-                image: DecorationImage(
-                    image: store.state.firebaseState.user?.isAnonymous ?? true
-                        ? AssetImage('assets/user.png')
-                        : NetworkImage(
-                            store.state.firebaseState.user.photoUrl))),
-          ),
-        ],
-      ),
-      body: StoreConnector<AppState, _ViewModel>(
+    return new StoreConnector<AppState, _ViewModel>(
         converter: (Store<AppState> store) => _ViewModel.create(store),
-        builder: (BuildContext context, _ViewModel viewModel) =>
-            _buildSuggestions(viewModel),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem> [
-          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('home')),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle), title: Text('account'))
-        ],
-        fixedColor: Colors.lightBlue,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
-      drawer: Container(
-        child: ReduxDevTools(store),
-      ),
-    );
+        onInit: (store) => store.dispatch(InitAction()),
+        builder: (context, viewModel) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Startup Name Generator'),
+              actions: <Widget>[
+                new IconButton(
+                    icon: const Icon(Icons.list), onPressed: _pushSaved),
+                new Container(
+                  height: 50,
+                  width: 50,
+                  child: new FlatButton(
+                    onPressed: () {
+                      if (viewModel.user?.isAnonymous) {
+                        viewModel.login();
+                      } else {
+                        viewModel.logout();
+                      }
+                    },
+                    child: new ConstrainedBox(
+                      constraints: new BoxConstraints.expand(),
+                    ),
+                  ),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25.0),
+                      border: Border.all(
+                          color: Colors.white,
+                          style: BorderStyle.solid,
+                          width: 2.0),
+                      image: DecorationImage(
+                          image: viewModel.user?.isAnonymous ??
+                                  true
+                              ? AssetImage('assets/user.png')
+                              : NetworkImage(
+                                  viewModel.user.photoUrl))),
+                ),
+              ],
+            ),
+            body: _buildSuggestions(viewModel),
+            bottomNavigationBar: BottomNavigationBar(
+              items: <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.home), title: Text('home')),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.account_circle), title: Text('account'))
+              ],
+              fixedColor: Colors.lightBlue,
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
+            ),
+            drawer: Container(
+              child: ReduxDevTools(store),
+            ),
+          );
+        });
   }
 
   void _onItemTapped(int index) {
@@ -115,8 +123,6 @@ class RandomWordsState extends State<RandomWords> {
       _selectedIndex = index;
     });
   }
-
-
 
   Widget _buildSuggestions(_ViewModel viewModel) {
     return new ListView.builder(
@@ -142,7 +148,7 @@ class RandomWordsState extends State<RandomWords> {
       ),
       onTap: () {
         _suggestions.remove(pair);
-        viewModel.onAddStartup(pair.asPascalCase);
+        viewModel.addStartup(pair.asPascalCase);
       },
     );
   }
@@ -159,7 +165,7 @@ class RandomWordsState extends State<RandomWords> {
               child: Text("remove"),
               textColor: Colors.red,
               onPressed: () {
-                viewModel.onRemoveStartup(startup);
+                viewModel.removeStartup(startup);
               }),
         );
       });
@@ -180,20 +186,37 @@ class RandomWordsState extends State<RandomWords> {
 
 class _ViewModel {
   final List<Startup> startups;
-  final Function(String) onAddStartup;
-  final Function(Startup) onRemoveStartup;
+  final FirebaseUser user;
+  final Function(String) addStartup;
+  final Function(Startup) removeStartup;
+  final Function() login;
+  final Function() logout;
   final Function(List<Startup>) onGoogleLogin;
 
   _ViewModel(
-      {this.startups, this.onAddStartup, this.onRemoveStartup, this.onGoogleLogin});
+      {this.startups,
+      this.user,
+      this.addStartup,
+      this.removeStartup,
+      this.login,
+      this.logout,
+      this.onGoogleLogin});
 
   factory _ViewModel.create(Store<AppState> store) {
-    _onAddStartup(String name) {
+    _addStartup(String name) {
       store.dispatch(AddStartupAction(Startup(name: name)));
     }
 
-    _onRemoveStartup(Startup startup) {
+    _removeStartup(Startup startup) {
       store.dispatch(RemoveStartupAction(startup));
+    }
+
+    _login() {
+      store.dispatch(GoogleLoginAction(cachedStartups: store.state.startups));
+    }
+
+    _logout() {
+      store.dispatch(GoogleLogoutAction());
     }
 
     _onGoogleLogin(List<Startup> cachedStartups) {
@@ -201,10 +224,12 @@ class _ViewModel {
     }
 
     return _ViewModel(
-      startups: store.state.startups,
-      onAddStartup: _onAddStartup,
-      onRemoveStartup: _onRemoveStartup,
-      onGoogleLogin: _onGoogleLogin,
-    );
+        startups: store.state.startups,
+        user: store.state.firebaseState.user,
+        addStartup: _addStartup,
+        removeStartup: _removeStartup,
+        onGoogleLogin: _onGoogleLogin,
+        login: _login,
+        logout: _logout);
   }
 }

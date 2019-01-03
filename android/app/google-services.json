@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "129755025319",
+    "firebase_url": "https://liftr-eebdc.firebaseio.com",
+    "project_id": "liftr-eebdc",
+    "storage_bucket": "liftr-eebdc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:129755025319:android:fdb2a4dfd8096f33",
+        "android_client_info": {
+          "package_name": "printz.liftr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "129755025319-vqvk7lamhilbobh3rbmgu8f62v9b576s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "printz.liftr",
+            "certificate_hash": "54171df106b96a492ef3e08a41bd7261b616951b"
+          }
+        },
+        {
+          "client_id": "129755025319-dob883ju6vk4vvfs6jh4romjgbu1tsl1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_Aav5CVfmuwcLqTEG3jppwDSIPTYjrB8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "129755025319-dob883ju6vk4vvfs6jh4romjgbu1tsl1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
