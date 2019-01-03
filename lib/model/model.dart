@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 class Startup {
   String key;
@@ -59,14 +60,18 @@ class AppState {
 
 class FirebaseState {
   final DatabaseReference mainReference;
+  final StreamSubscription<Event> subAddStartup;
+  final StreamSubscription<Event> subRemoveStartup;
   final FirebaseUser user;
 
-  const FirebaseState({this.mainReference, this.user});
+  const FirebaseState({this.mainReference, this.user, this.subAddStartup, this.subRemoveStartup});
 
-  FirebaseState copyWith({ DatabaseReference mainReference, FirebaseUser user }) {
+  FirebaseState copyWith({ DatabaseReference mainReference, FirebaseUser user, StreamSubscription<Event> subAddStartup, StreamSubscription<Event> subRemoveStartup}) {
     return new FirebaseState(
         mainReference: mainReference ?? this.mainReference,
         user: user ?? this.user,
+        subAddStartup: subAddStartup ?? this.subAddStartup,
+        subRemoveStartup: subRemoveStartup ?? this.subRemoveStartup,
         );
   }
 }

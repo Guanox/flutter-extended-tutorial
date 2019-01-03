@@ -32,7 +32,7 @@ List<Startup> removeStartupReducer(List<Startup> startups, RemovedStartupAction 
 }
 
 FirebaseState addDatabaseReferenceReducer(FirebaseState firebaseState, AddDatabaseReferenceAction action) {
-  return firebaseState.copyWith(mainReference: action.databaseReference);
+  return firebaseState.copyWith(mainReference: action.databaseReference, subAddStartup: action.subAddStartup, subRemoveStartup: action.subRemoveStartup);
 }
 
 FirebaseState userLoadedReducer(FirebaseState firebaseState, UserLoadedAction action) {

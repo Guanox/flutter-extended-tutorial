@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:english_words/english_words.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_redux/flutter_redux.dart';
@@ -11,12 +10,12 @@ import 'package:liftr/redux/actions.dart';
 import 'suggestions_page.dart';
 import 'favorites_page.dart';
 
-class MainPage extends StatefulWidget {
+class HomePage extends StatefulWidget {
   @override
-  MainPageState createState() => new MainPageState();
+  HomePageState createState() => new HomePageState();
 }
 
-class MainPageState extends State<MainPage> {
+class HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   final _widgetTabs = [
     new SuggestionsPage(),
@@ -65,9 +64,9 @@ class MainPageState extends State<MainPage> {
             bottomNavigationBar: BottomNavigationBar(
               items: <BottomNavigationBarItem>[
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.home), title: Text('home')),
+                    icon: Icon(Icons.home), title: Text('Suggestions')),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.account_circle), title: Text('account'))
+                    icon: Icon(Icons.favorite), title: Text('Favorites'))
               ],
               fixedColor: Colors.lightBlue,
               currentIndex: _selectedIndex,
@@ -82,36 +81,6 @@ class MainPageState extends State<MainPage> {
       _selectedIndex = index;
     });
   }
-
-  // void _pushSaved() {
-  //   _ViewModel viewModel = _ViewModel.create(store);
-  //   Navigator.of(context)
-  //       .push(new MaterialPageRoute<void>(builder: (BuildContext context) {
-  //     final Iterable<ListTile> tiles =
-  //         viewModel.startups.map((Startup startup) {
-  //       return new ListTile(
-  //         title: new Text(startup.name, style: TextStyle(fontSize: 18.0)),
-  //         trailing: new MaterialButton(
-  //             child: Text("remove"),
-  //             textColor: Colors.red,
-  //             onPressed: () {
-  //               viewModel.removeStartup(startup);
-  //             }),
-  //       );
-  //     });
-  //     final List<Widget> divided = ListTile.divideTiles(
-  //       context: context,
-  //       tiles: tiles,
-  //     ).toList();
-
-  //     return new Scaffold(
-  //       appBar: new AppBar(
-  //         title: Text('Saved Suggestions'),
-  //       ),
-  //       body: new ListView(children: divided),
-  //     );
-  //   }));
-  // }
 }
 
 class _ViewModel {

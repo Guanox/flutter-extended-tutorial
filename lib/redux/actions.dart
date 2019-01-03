@@ -1,6 +1,7 @@
 import 'package:liftr/model/model.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 class UserLoadedAction {
   final FirebaseUser user;
@@ -46,6 +47,8 @@ class InitAction { }
 
 class AddDatabaseReferenceAction {
   final DatabaseReference databaseReference;
+  final StreamSubscription<Event> subAddStartup;
+  final StreamSubscription<Event> subRemoveStartup;
 
-  AddDatabaseReferenceAction(this.databaseReference);
+  AddDatabaseReferenceAction(this.databaseReference, this.subAddStartup, this.subRemoveStartup);
 }

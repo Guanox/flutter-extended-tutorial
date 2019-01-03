@@ -22,7 +22,6 @@ class SuggestionsPageState extends State<SuggestionsPage> {
   Widget build(BuildContext context) {
     return new StoreConnector<AppState, _ViewModel>(
         converter: (Store<AppState> store) => _ViewModel.create(store),
-        onInit: (store) => store.dispatch(InitAction()),
         builder: (context, viewModel) {
           return new ListView.builder(
               padding: const EdgeInsets.all(16.0),

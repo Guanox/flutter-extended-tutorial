@@ -32,6 +32,9 @@ Middleware<AppState> _handleGoogleLogoutAction(AppState state) {
   return (Store<AppState> store, action, NextDispatcher next) async {
     next(action);
 
+    // state.firebaseState.subAddStartup.cancel();
+    // state.firebaseState.subRemoveStartup.cancel();
+
     _googleSignIn.signOut();
     FirebaseAuth.instance.signOut().then((_) => FirebaseAuth.instance
         .signInAnonymously()
@@ -46,15 +49,10 @@ Middleware<AppState> _handleGoogleLoginAction(AppState state) {
     GoogleSignInAccount googleUser = await _getGoogleUser();
     GoogleSignInAuthentication credentials = await googleUser.authentication;
 
-    // try {
-    // await FirebaseAuth.instance.linkWithGoogleCredential(
-    //     idToken: credentials.idToken, accessToken: credentials.accessToken);
-    // } catch (e) {
     await FirebaseAuth.instance.signInWithGoogle(
       idToken: credentials.idToken,
       accessToken: credentials.accessToken,
     );
-    // }
 
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     await user.updateProfile(new UserUpdateInfo()
@@ -62,15 +60,12 @@ Middleware<AppState> _handleGoogleLoginAction(AppState state) {
       ..displayName = googleUser.displayName);
     user.reload();
 
-    store.dispatch(new UserLoadedAction(user));
+    store.dispatch(UserLoadedAction(user));
   };
 }
 
 Future<GoogleSignInAccount> _getGoogleUser() async {
   GoogleSignInAccount googleUser = _googleSignIn.currentUser;
-  // if (googleUser == null) {
-  //   googleUser = await _googleSignIn.signInSilently(suppressErrors: true);
-  // }
   if (googleUser == null) {
     googleUser = await _googleSignIn.signIn();
   }
@@ -83,16 +78,23 @@ Middleware<AppState> _handleUserLoadedAction(AppState state) {
 
     store.dispatch(RemoveStartupsAction()); // reset startups
 
+    // remove previously added listeners
+    store.state.firebaseState.subAddStartup?.cancel();
+    store.state.firebaseState.subRemoveStartup?.cancel();
+
+    var ref = FirebaseDatabase.instance
+        .reference()
+        .child(store.state.firebaseState.user.uid)
+        .child('startups');
+    
+    var subAdd = ref.onChildAdded.listen((event) => store.dispatch(AddedStartupAction(event)));
+    var subRemove = ref.onChildRemoved.listen((event) => store.dispatch(RemovedStartupAction(event)));
+
     store.dispatch(AddDatabaseReferenceAction(
-      FirebaseDatabase.instance
-          .reference()
-          .child(store.state.firebaseState.user.uid)
-          .child('startups')
-            ..onChildAdded
-                .listen((event) => store.dispatch(AddedStartupAction(event)))
-            ..onChildRemoved
-                .listen((event) => store.dispatch(RemovedStartupAction(event))),
+      ref, subAdd, subRemove
     ));
+
+
   };
 }
 

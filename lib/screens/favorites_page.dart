@@ -36,9 +36,6 @@ class FavoritesPageState extends State<FavoritesPage> {
           ).toList();
 
           return new Scaffold(
-            appBar: new AppBar(
-              title: Text('Saved Suggestions'),
-            ),
             body: new ListView(children: divided),
           );
         });
