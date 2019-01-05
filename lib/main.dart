@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:redux_dev_tools/redux_dev_tools.dart';
+import 'package:redux/redux.dart';
 
 import 'package:liftr/model/model.dart';
+import 'package:liftr/redux/actions.dart';
+
 import 'package:liftr/redux/reducers.dart';
 import 'package:liftr/redux/middleware.dart';
 
@@ -27,7 +30,11 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primaryColor: Colors.white,
         ),
-        home: HomePage(),
+        home: StoreBuilder<AppState>(
+          onInit: (store) => store.dispatch(InitAction()),
+          builder: (BuildContext context, Store<AppState> store) =>
+              HomePage(),
+        ),
       ),
     );
   }

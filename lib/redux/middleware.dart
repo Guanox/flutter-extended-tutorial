@@ -5,11 +5,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:liftr/model/model.dart';
 import 'package:liftr/redux/actions.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final GoogleSignIn _googleSignIn = GoogleSignIn();
 
 List<Middleware<AppState>> appStateMiddleware([
-  AppState state = const AppState(startups: [], firebaseState: FirebaseState()),
+  AppState state = const AppState(
+      fontSize: 18.0, startups: [], firebaseState: FirebaseState()),
 ]) {
   final Function init = _handleInitAction(state);
   final Function userLoad = _handleUserLoadedAction(state);
@@ -17,6 +19,7 @@ List<Middleware<AppState>> appStateMiddleware([
   final Function googleLogout = _handleGoogleLogoutAction(state);
   final Function addStartup = _handleAddStartupAction(state);
   final Function removeStartup = _handleRemoveStartupAction(state);
+  final Function changeFontSize = _handleChangeFontSizeAction(state);
 
   return [
     TypedMiddleware<AppState, InitAction>(init),
@@ -25,7 +28,21 @@ List<Middleware<AppState>> appStateMiddleware([
     TypedMiddleware<AppState, GoogleLogoutAction>(googleLogout),
     TypedMiddleware<AppState, AddStartupAction>(addStartup),
     TypedMiddleware<AppState, RemoveStartupAction>(removeStartup),
+    TypedMiddleware<AppState, ChangeFontSizeAction>(changeFontSize),
   ];
+}
+
+Middleware<AppState> _handleChangeFontSizeAction(AppState state) {
+  return (Store<AppState> store, action, NextDispatcher next) async {
+    next(action);
+
+    _saveFontSizeToPrefs(store.state.fontSize);
+  };
+}
+
+Future<void> _saveFontSizeToPrefs(double fontSize) async {
+  final SharedPreferences preferences = await SharedPreferences.getInstance();
+  await preferences.setDouble('fontSize', fontSize);
 }
 
 Middleware<AppState> _handleGoogleLogoutAction(AppState state) {
@@ -44,7 +61,8 @@ Middleware<AppState> _handleGoogleLoginAction(AppState state) {
     next(action);
 
     final GoogleSignInAccount googleUser = await _getGoogleUser();
-    final GoogleSignInAuthentication credentials = await googleUser.authentication;
+    final GoogleSignInAuthentication credentials =
+        await googleUser.authentication;
 
     await FirebaseAuth.instance.signInWithGoogle(
       idToken: credentials.idToken,
@@ -95,6 +113,9 @@ Middleware<AppState> _handleInitAction(AppState state) {
   return (Store<AppState> store, action, NextDispatcher next) {
     next(action);
 
+    _loadFontSizeFromPrefs()
+        .then((fontSize) => store.dispatch(ChangeFontSizeAction(fontSize)));
+
     if (store.state.firebaseState.user == null) {
       FirebaseAuth.instance.currentUser().then((user) {
         if (user != null) {
@@ -107,6 +128,12 @@ Middleware<AppState> _handleInitAction(AppState state) {
       });
     }
   };
+}
+
+Future<double> _loadFontSizeFromPrefs() async {
+  final SharedPreferences preferences = await SharedPreferences.getInstance();
+  final double value = preferences.get('fontSize');
+  return value != null ? value : 18.0;
 }
 
 Middleware<AppState> _handleAddStartupAction(AppState state) {

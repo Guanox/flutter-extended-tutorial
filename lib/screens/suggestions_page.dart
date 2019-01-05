@@ -43,7 +43,7 @@ class SuggestionsPageState extends State<SuggestionsPage> {
     return ListTile(
       title: Text(
         pair.asPascalCase,
-        style: TextStyle(fontSize: 18.0),
+        style: TextStyle(fontSize: viewModel.fontSize),
       ),
       onTap: () {
         _suggestions.remove(pair);
@@ -54,10 +54,11 @@ class SuggestionsPageState extends State<SuggestionsPage> {
 }
 
 class _ViewModel {
+  final double fontSize;
   final List<Startup> startups;
   final Function(String) onAddStartup;
 
-  _ViewModel({this.startups, this.onAddStartup});
+  _ViewModel({this.fontSize, this.startups, this.onAddStartup});
 
   factory _ViewModel.create(Store<AppState> store) {
     void _onAddStartup(String name) {
@@ -65,6 +66,7 @@ class _ViewModel {
     }
 
     return _ViewModel(
+      fontSize: store.state.fontSize,
       startups: store.state.startups,
       onAddStartup: _onAddStartup,
     );

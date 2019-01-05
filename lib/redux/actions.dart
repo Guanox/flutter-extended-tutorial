@@ -43,6 +43,12 @@ class RemovedStartupAction {
   RemovedStartupAction(this.event);
 }
 
+class ChangeFontSizeAction {
+  final double value;
+
+  ChangeFontSizeAction(this.value);
+}
+
 class InitAction { }
 
 class AddDatabaseReferenceAction {

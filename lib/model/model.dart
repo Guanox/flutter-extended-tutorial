@@ -4,6 +4,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class Startup {
+  String key;
+  final String name;
+
   Startup({
     @required this.name,
   });
@@ -13,9 +16,6 @@ class Startup {
         name = snapshot.value['name'];
 
   Startup._internal(this.key, this.name);
-
-  String key;
-  final String name;
 
   Startup copyWith({String key, String name}) {
     return Startup._internal(
@@ -33,20 +33,22 @@ class Startup {
 }
 
 class AppState {
+  final List<Startup> startups;
+  final double fontSize;
+  final FirebaseState firebaseState;
+
   const AppState({
     @required this.startups,
+    @required this.fontSize,
     @required this.firebaseState,
   });
 
   AppState.initialState()
       : startups = List.unmodifiable(<Startup>[]),
+        fontSize = 18.0,
         firebaseState = FirebaseState();
 
-
-  final List<Startup> startups;
-  final FirebaseState firebaseState;
-
-  Map toJson() => {'startups': startups};
+  Map toJson() => {'startups': startups, 'numberOfWords': fontSize};
 
   @override
   String toString() {

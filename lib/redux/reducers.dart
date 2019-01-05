@@ -6,6 +6,7 @@ import 'package:redux/redux.dart';
 AppState appStateReducer(AppState state, dynamic action) {
   return AppState(
     startups: startupReducer(state.startups, action),
+    fontSize: fontSizeReducer(state.fontSize, action),
     firebaseState: firebaseReducer(state.firebaseState, action),
   );
 }
@@ -14,6 +15,10 @@ Reducer<List<Startup>> startupReducer = combineReducers<List<Startup>>([
   TypedReducer<List<Startup>, AddedStartupAction>(addStartupReducer),
   TypedReducer<List<Startup>, RemovedStartupAction>(removeStartupReducer),
   TypedReducer<List<Startup>, RemoveStartupsAction>(removeStartupsReducer),
+]);
+
+Reducer<double> fontSizeReducer = combineReducers<double>([
+  TypedReducer<double, ChangeFontSizeAction>(changedFontSizeReducer),
 ]);
 
 Reducer<FirebaseState> firebaseReducer = combineReducers<FirebaseState>([
@@ -29,6 +34,10 @@ List<Startup> addStartupReducer(List<Startup> startups, AddedStartupAction actio
 
 List<Startup> removeStartupReducer(List<Startup> startups, RemovedStartupAction action) {
   return List.unmodifiable(List.from(startups)..removeWhere((s) => s.key == action.event.snapshot.key));
+}
+
+double changedFontSizeReducer(double value, ChangeFontSizeAction action) {
+  return action.value;
 }
 
 FirebaseState addDatabaseReferenceReducer(FirebaseState firebaseState, AddDatabaseReferenceAction action) {
