@@ -11,11 +11,10 @@ addons:
     packages:
       - lib32stdc++6
 install:
-  - git clone https://github.com/flutter/flutter.git -b beta
-  - ./flutter/bin/flutter doctor
+  - git clone https://github.com/flutter/flutter.git -b beta .flutter
+  - ./.flutter/bin/flutter doctor
 script:
-  - ls -l
-  - ./flutter/bin/flutter $COMMAND
+  - ./.flutter/bin/flutter $COMMAND
 cache:
   directories:
     - $HOME/.pub-cache
