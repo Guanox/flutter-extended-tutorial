@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:liftr/model/model.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:async';
 
 class UserLoadedAction {
   final FirebaseUser user;

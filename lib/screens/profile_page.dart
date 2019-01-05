@@ -9,20 +9,22 @@ import 'package:liftr/redux/actions.dart';
 
 class SettingsPage extends StatefulWidget {
   @override
-  ProfilePageState createState() => new ProfilePageState();
+  ProfilePageState createState() => ProfilePageState();
 }
 
 class ProfilePageState extends State<SettingsPage> {
+
+
   @override
   Widget build(BuildContext context) {
-    return new StoreConnector<AppState, _ViewModel>(
+    return StoreConnector<AppState, _ViewModel>(
       converter: (Store<AppState> store) => _ViewModel.create(store),
       builder: (context, viewModel) {
-        return new Scaffold(
-            appBar: new AppBar(title: new Text('Profile')),
+        return Scaffold(
+            appBar: AppBar(title: Text('Profile')),
             body: Column(
-              children: <Widget>[
-                new Text("hello")
+              children: const <Widget>[
+                Text('hello')
                 // Profile
                 // Settings
               ],
@@ -40,11 +42,11 @@ class _ViewModel {
   _ViewModel({this.user, this.login, this.logout});
 
   factory _ViewModel.create(Store<AppState> store) {
-    _login() {
+    void _login() {
       store.dispatch(GoogleLoginAction(cachedStartups: store.state.startups));
     }
 
-    _logout() {
+    void _logout() {
       store.dispatch(GoogleLogoutAction());
     }
 

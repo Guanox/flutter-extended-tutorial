@@ -7,25 +7,25 @@ import 'package:redux/redux.dart';
 import 'package:liftr/model/model.dart';
 import 'package:liftr/redux/actions.dart';
 
+import 'favorites_page.dart';
 import 'profile_page.dart';
 import 'suggestions_page.dart';
-import 'favorites_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
-  HomePageState createState() => new HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
 class HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   final _widgetTabs = [
-    new SuggestionsPage(),
-    new FavoritesPage(),
+    SuggestionsPage(),
+    FavoritesPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return new StoreConnector<AppState, _ViewModel>(
+    return StoreConnector<AppState, _ViewModel>(
         converter: (Store<AppState> store) => _ViewModel.create(store),
         onInit: (store) => store.dispatch(InitAction()),
         builder: (context, viewModel) {
@@ -33,22 +33,22 @@ class HomePageState extends State<HomePage> {
             appBar: AppBar(
               title: Text('Startup Name Generator'),
               actions: <Widget>[
-                new Container(
+                Container(
                   height: 50,
                   width: 50,
-                  child: new FlatButton(
-                    onPressed: () => this._openSettingsPage(context),
+                  child: FlatButton(
+                    onPressed: () => _openSettingsPage(context),
                     // onPressed: () {
 
-                      // final isAnonymous = viewModel.user != null ? viewModel.user.isAnonymous : false;
-                      // if (isAnonymous) {
-                      //   viewModel.login();
-                      // } else {
-                      //   viewModel.logout();
-                      // }
+                    // final isAnonymous = viewModel.user != null ? viewModel.user.isAnonymous : false;
+                    // if (isAnonymous) {
+                    //   viewModel.login();
+                    // } else {
+                    //   viewModel.logout();
+                    // }
                     // },
-                    child: new ConstrainedBox(
-                      constraints: new BoxConstraints.expand(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints.expand(),
                     ),
                   ),
                   decoration: BoxDecoration(
@@ -66,7 +66,7 @@ class HomePageState extends State<HomePage> {
             ),
             body: _widgetTabs.elementAt(_selectedIndex),
             bottomNavigationBar: BottomNavigationBar(
-              items: <BottomNavigationBarItem>[
+              items: const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(
                     icon: Icon(Icons.home), title: Text('Suggestions')),
                 BottomNavigationBarItem(
@@ -86,12 +86,11 @@ class HomePageState extends State<HomePage> {
     });
   }
 
-  void _openSettingsPage(BuildContext context) async {
-    Navigator.of(context).push(new MaterialPageRoute(
-      builder: (BuildContext context) {
-        return new SettingsPage();
-      }
-    ));
+  Future<void> _openSettingsPage(BuildContext context) async {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (BuildContext context) {
+      return SettingsPage();
+    }));
   }
 }
 
@@ -103,11 +102,11 @@ class _ViewModel {
   _ViewModel({this.user, this.login, this.logout});
 
   factory _ViewModel.create(Store<AppState> store) {
-    _login() {
+    void _login() {
       store.dispatch(GoogleLoginAction(cachedStartups: store.state.startups));
     }
 
-    _logout() {
+    void _logout() {
       store.dispatch(GoogleLogoutAction());
     }
 

@@ -3,7 +3,7 @@ import 'package:liftr/redux/actions.dart';
 
 import 'package:redux/redux.dart';
 
-AppState appStateReducer(AppState state, action) {
+AppState appStateReducer(AppState state, dynamic action) {
   return AppState(
     startups: startupReducer(state.startups, action),
     firebaseState: firebaseReducer(state.firebaseState, action),

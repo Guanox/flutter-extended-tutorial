@@ -10,7 +10,7 @@ import 'package:liftr/redux/actions.dart';
 class SuggestionsPage extends StatefulWidget {
 
   @override
-  SuggestionsPageState createState() => new SuggestionsPageState();
+  SuggestionsPageState createState() => SuggestionsPageState();
 }
 
 class SuggestionsPageState extends State<SuggestionsPage> {
@@ -20,14 +20,14 @@ class SuggestionsPageState extends State<SuggestionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return new StoreConnector<AppState, _ViewModel>(
+    return StoreConnector<AppState, _ViewModel>(
         converter: (Store<AppState> store) => _ViewModel.create(store),
         builder: (context, viewModel) {
-          return new ListView.builder(
+          return ListView.builder(
               padding: const EdgeInsets.all(16.0),
               itemBuilder: (BuildContext _context, int i) {
                 if (i.isOdd) {
-                  return new Divider();
+                  return Divider();
                 }
 
                 final int index = i ~/ 2;
@@ -40,8 +40,8 @@ class SuggestionsPageState extends State<SuggestionsPage> {
   }
 
   Widget _buildRow(WordPair pair, _ViewModel viewModel) {
-    return new ListTile(
-      title: new Text(
+    return ListTile(
+      title: Text(
         pair.asPascalCase,
         style: TextStyle(fontSize: 18.0),
       ),
@@ -60,7 +60,7 @@ class _ViewModel {
   _ViewModel({this.startups, this.onAddStartup});
 
   factory _ViewModel.create(Store<AppState> store) {
-    _onAddStartup(String name) {
+    void _onAddStartup(String name) {
       store.dispatch(AddStartupAction(Startup(name: name)));
     }
 
