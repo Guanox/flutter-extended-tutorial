@@ -7,6 +7,7 @@ import 'package:redux/redux.dart';
 import 'package:liftr/model/model.dart';
 import 'package:liftr/redux/actions.dart';
 
+import 'profile_page.dart';
 import 'suggestions_page.dart';
 import 'favorites_page.dart';
 
@@ -36,13 +37,16 @@ class HomePageState extends State<HomePage> {
                   height: 50,
                   width: 50,
                   child: new FlatButton(
-                    onPressed: () {
-                      if (viewModel.user?.isAnonymous) {
-                        viewModel.login();
-                      } else {
-                        viewModel.logout();
-                      }
-                    },
+                    onPressed: () => this._openSettingsPage(context),
+                    // onPressed: () {
+
+                      // final isAnonymous = viewModel.user != null ? viewModel.user.isAnonymous : false;
+                      // if (isAnonymous) {
+                      //   viewModel.login();
+                      // } else {
+                      //   viewModel.logout();
+                      // }
+                    // },
                     child: new ConstrainedBox(
                       constraints: new BoxConstraints.expand(),
                     ),
@@ -80,6 +84,14 @@ class HomePageState extends State<HomePage> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void _openSettingsPage(BuildContext context) async {
+    Navigator.of(context).push(new MaterialPageRoute(
+      builder: (BuildContext context) {
+        return new SettingsPage();
+      }
+    ));
   }
 }
 
