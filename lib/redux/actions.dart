@@ -26,9 +26,9 @@ class AddStartupAction {
 }
 
 class AddedStartupAction {
-  final Event event;
+  final DataSnapshot snapshot;
 
-  AddedStartupAction(this.event);
+  AddedStartupAction(this.snapshot);
 }
 
 class RemoveStartupAction {
@@ -38,9 +38,9 @@ class RemoveStartupAction {
 }
 
 class RemovedStartupAction {
-  final Event event;
+  final DataSnapshot snapshot;
 
-  RemovedStartupAction(this.event);
+  RemovedStartupAction(this.snapshot);
 }
 
 class ChangeFontSizeAction {

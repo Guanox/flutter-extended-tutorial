@@ -101,9 +101,9 @@ Middleware<AppState> _handleUserLoadedAction(AppState state) {
         .child('startups');
 
     final subAdd = ref.onChildAdded
-        .listen((event) => store.dispatch(AddedStartupAction(event)));
+        .listen((event) => store.dispatch(AddedStartupAction(event.snapshot)));
     final subRemove = ref.onChildRemoved
-        .listen((event) => store.dispatch(RemovedStartupAction(event)));
+        .listen((event) => store.dispatch(RemovedStartupAction(event.snapshot)));
 
     store.dispatch(AddDatabaseReferenceAction(ref, subAdd, subRemove));
   };

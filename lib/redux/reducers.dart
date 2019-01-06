@@ -29,11 +29,11 @@ Reducer<FirebaseState> firebaseReducer = combineReducers<FirebaseState>([
 List<Startup> addStartupReducer(List<Startup> startups, AddedStartupAction action) {
   return []
     ..addAll(startups)
-    ..add(Startup.fromSnapshot(action.event.snapshot));
+    ..add(Startup.fromSnapshot(action.snapshot));
 }
 
 List<Startup> removeStartupReducer(List<Startup> startups, RemovedStartupAction action) {
-  return List.unmodifiable(List.from(startups)..removeWhere((s) => s.key == action.event.snapshot.key));
+  return List.unmodifiable(List.from(startups)..removeWhere((s) => s.key == action.snapshot.key));
 }
 
 double changedFontSizeReducer(double value, ChangeFontSizeAction action) {
